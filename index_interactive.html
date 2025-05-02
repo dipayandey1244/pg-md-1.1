@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Interactive PG MD Quiz</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px auto; max-width: 800px; padding: 20px; background-color: #f4f4f9; }
+    h1 { text-align: center; }
+    .question-block { margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .question-text { font-weight: bold; margin-bottom: 10px; }
+    .option { display: block; margin: 8px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #eee; cursor: pointer; }
+    .option.correct { background: #c8e6c9; border-color: #2e7d32; }
+    .option.incorrect { background: #ffcdd2; border-color: #c62828; }
+    .disabled { pointer-events: none; }
+    #score { font-size: 1.2em; text-align: center; margin-top: 30px; }
+    button { margin: 30px auto; display: block; padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: #fff; border: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+<h1>PG MD Quiz: 5 Random Questions</h1>
+<div id="quiz-container"></div>
+<div id="score"></div>
+<button onclick="startQuiz()">Play Again</button>
+
+<script>
+let questions = [];
+let score = 0;
+
+async function startQuiz() {
+  const response = await fetch('interactive_pg_md_mcqs.json');
+  const data = await response.json();
+  document.getElementById('score').innerText = '';
+  score = 0;
+  const quizContainer = document.getElementById('quiz-container');
+  quizContainer.innerHTML = '';
+  const selected = data.sort(() => 0.5 - Math.random()).slice(0, 5);
+  questions = selected;
+
+  selected.forEach((q, i) => {
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    const qText = document.createElement('div');
+    qText.className = 'question-text';
+    qText.innerText = `Q${i + 1}: ${q.question}`;
+    block.appendChild(qText);
+
+    q.options.forEach((opt, idx) => {
+      const optDiv = document.createElement('div');
+      optDiv.className = 'option';
+      optDiv.innerText = opt;
+      optDiv.onclick = () => checkAnswer(optDiv, idx, q.answerIndex, block);
+      block.appendChild(optDiv);
+    });
+
+    quizContainer.appendChild(block);
+  });
+}
+
+function checkAnswer(el, chosenIdx, correctIdx, container) {
+  const options = container.querySelectorAll('.option');
+  options.forEach(opt => opt.classList.add('disabled'));
+  if (chosenIdx === correctIdx) {
+    el.classList.add('correct');
+    score++;
+  } else {
+    el.classList.add('incorrect');
+    options[correctIdx].classList.add('correct');
+  }
+
+  if (document.querySelectorAll('.option:not(.disabled)').length === 0) {
+    setTimeout(() => {
+      document.getElementById('score').innerText = `You scored ${score} out of 5.`;
+    }, 300);
+  }
+}
+
+startQuiz();
+</script>
+
+</body>
+</html>
